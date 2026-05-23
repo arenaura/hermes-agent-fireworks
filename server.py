@@ -201,12 +201,37 @@ def write_config_yaml(data: dict[str, str]) -> None:
     # Deployment-managed (always authoritative — these reflect the runtime env).
     merged_model = dict(merged.get("model") if isinstance(merged.get("model"), dict) else {})
     merged_model["default"] = model
-    # Only force provider="auto" when a known API key is configured. If no
-    # API key is set, the user likely configured an OAuth provider (xai-oauth,
+    # Only force provider="auto" when a known natively-routed API key is configured.
+    # If no API key is set, the user likely configured an OAuth provider (xai-oauth,
     # qwen-oauth, etc.) via the dashboard's model picker — preserve that value
     # so a container restart doesn't revert it to "auto" and break their session.
-    if any(data.get(k) for k in PROVIDER_KEYS):
+    # When only a compatible provider (Fireworks) or custom endpoint is configured
+    # (no natively-auto-routed keys), set provider to the custom_providers name so
+    # Hermes routes through the custom_providers block — "auto" ignores custom_providers.
+    # Provider keys that Hermes natively auto-routes via env-var detection.
+    NATIVE_PROVIDER_KEYS = [
+        "OPENROUTER_API_KEY", "DEEPSEEK_API_KEY", "DASHSCOPE_API_KEY",
+        "GLM_API_KEY", "KIMI_API_KEY", "MINIMAX_API_KEY", "HF_TOKEN",
+        "NVIDIA_API_KEY", "ARCEE_API_KEY", "STEPFUN_API_KEY",
+        "AI_GATEWAY_API_KEY", "GEMINI_API_KEY", "NOVITA_API_KEY",
+    ]
+    # Provider keys that require custom_providers routing (not auto-detected by Hermes).
+    COMPAT_PROVIDER_KEYS = {
+        "FIREWORKS_API_KEY": "fireworks",
+        "CUSTOM_PROVIDER_API_KEY": None,  # name derived from CUSTOM_PROVIDER_NAME
+    }
+    if any(data.get(k) for k in NATIVE_PROVIDER_KEYS):
         merged_model["provider"] = "auto"
+    elif any(data.get(k) for k in COMPAT_PROVIDER_KEYS):
+        # Pick the first configured compat provider as the active provider.
+        for key, name in COMPAT_PROVIDER_KEYS.items():
+            if data.get(key):
+                if name:
+                    merged_model["provider"] = name
+                elif data.get("CUSTOM_PROVIDER_BASE_URL"):
+                    raw_name = data.get("CUSTOM_PROVIDER_NAME", "").strip() or data["CUSTOM_PROVIDER_BASE_URL"].strip()
+                    merged_model["provider"] = re.sub(r"[^a-z0-9-]", "-", raw_name.lower()).strip("-") or "custom"
+                break
     merged["model"] = merged_model
 
     merged_terminal = dict(merged.get("terminal") if isinstance(merged.get("terminal"), dict) else {})
@@ -221,6 +246,27 @@ def write_config_yaml(data: dict[str, str]) -> None:
 
     merged["data_dir"] = HERMES_HOME
 
+    # OpenAI-compatible providers that Hermes doesn't natively auto-route.
+    # When their API key is set, we write a custom_providers entry so Hermes
+    # can route through them via provider name (e.g. provider: "fireworks").
+    BUILTIN_COMPAT_PROVIDERS = {
+        "FIREWORKS_API_KEY": {
+            "name": "fireworks",
+            "base_url": "https://api.fireworks.ai/inference/v1",
+        },
+    }
+
+    custom_providers: list[dict] = []
+
+    # Add entries for built-in compatible providers whose keys are configured.
+    for key, spec in BUILTIN_COMPAT_PROVIDERS.items():
+        if data.get(key, "").strip():
+            custom_providers.append({
+                "name": spec["name"],
+                "base_url": spec["base_url"],
+                "key_env": key,
+            })
+
     # Custom OpenAI-compatible endpoint — write custom_providers block when configured,
     # remove it when not (safe on Railway where users don't hand-edit config.yaml).
     custom_base_url = data.get("CUSTOM_PROVIDER_BASE_URL", "").strip()
@@ -228,11 +274,14 @@ def write_config_yaml(data: dict[str, str]) -> None:
         raw_name = data.get("CUSTOM_PROVIDER_NAME", "").strip() or custom_base_url
         # Sanitise to a valid hermes provider name (lowercase alphanumeric + hyphens).
         sanitized_name = re.sub(r"[^a-z0-9-]", "-", raw_name.lower()).strip("-") or "custom"
-        merged["custom_providers"] = [{
+        custom_providers.append({
             "name": sanitized_name,
             "base_url": custom_base_url,
             "key_env": "CUSTOM_PROVIDER_API_KEY",
-        }]
+        })
+
+    if custom_providers:
+        merged["custom_providers"] = custom_providers
     else:
         merged.pop("custom_providers", None)
 

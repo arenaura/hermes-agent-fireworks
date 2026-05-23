@@ -71,7 +71,7 @@ All other configuration (LLM provider, model, channels, tools) is managed throug
 
 ## Supported Providers
 
-OpenRouter, DeepSeek, DashScope, GLM / Z.AI, Kimi, MiniMax, HuggingFace
+OpenRouter, Fireworks AI, DeepSeek, DashScope, GLM / Z.AI, Kimi, MiniMax, HuggingFace
 
 ## Supported Channels
 
