@@ -1,0 +1,16 @@
+services:
+  hermes:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hermes-agent
+    restart: unless-stopped
+    ports:
+      - "8080:8000"
+    env_file:
+      - .env
+    volumes:
+      - hermes-data:/data
+
+volumes:
+  hermes-data:
