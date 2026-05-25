@@ -10,7 +10,4 @@ services:
     env_file:
       - .env
     volumes:
-      - hermes-data:/data
-
-volumes:
-  hermes-data:
+      - ./data:/data
