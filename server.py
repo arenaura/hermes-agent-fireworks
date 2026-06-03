@@ -98,6 +98,7 @@ ENV_VARS = [
     ("GEMINI_API_KEY",           "Google AI Studio",         "provider",  True),
     ("NOVITA_API_KEY",           "NovitaAI",                 "provider",  True),
     ("FIREWORKS_API_KEY",        "Fireworks AI",             "provider",  True),
+    ("PIONEER_API_KEY",          "Pioneer AI",               "provider",  True),
     # Custom OpenAI-compatible endpoint — one slot; more via Hermes dashboard.
     # Only the API key is in category "provider" so PROVIDER_KEYS / is_config_complete
     # only trigger when an actual key is present, not just a base URL.
@@ -218,6 +219,7 @@ def write_config_yaml(data: dict[str, str]) -> None:
     # Provider keys that require custom_providers routing (not auto-detected by Hermes).
     COMPAT_PROVIDER_KEYS = {
         "FIREWORKS_API_KEY": "fireworks",
+        "PIONEER_API_KEY": "pioneer",
         "CUSTOM_PROVIDER_API_KEY": None,  # name derived from CUSTOM_PROVIDER_NAME
     }
     if any(data.get(k) for k in NATIVE_PROVIDER_KEYS):
@@ -253,6 +255,10 @@ def write_config_yaml(data: dict[str, str]) -> None:
         "FIREWORKS_API_KEY": {
             "name": "fireworks",
             "base_url": "https://api.fireworks.ai/inference/v1",
+        },
+        "PIONEER_API_KEY": {
+            "name": "pioneer",
+            "base_url": "https://api.pioneer.ai/v1",
         },
     }
 
