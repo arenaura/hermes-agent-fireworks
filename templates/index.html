@@ -838,11 +838,13 @@
             <input type="text" :value="vars.LLM_MODEL||''" @input="vars.LLM_MODEL=$event.target.value"
                    :placeholder="selectedProvider === 'xAI Grok (SuperGrok)' ? 'e.g. grok-4.3'
                      : selectedProvider === 'Fireworks AI' ? 'e.g. accounts/fireworks/models/llama-v3p1-70b-instruct'
+                     : selectedProvider === 'Pioneer AI' ? 'e.g. gpt-5.4-mini  or  zai-org/GLM-5.1'
                      : selectedProvider === 'Custom Endpoint' ? 'model-id as required by the endpoint'
                      : 'e.g. openai/gpt-4o-mini  or  deepseek/deepseek-chat'">
             <p class="hint" x-show="selectedProvider === 'xAI Grok (SuperGrok)'">Model name only — e.g. <code>grok-4.3</code>, <code>grok-4.20-0309-reasoning</code></p>
             <p class="hint" x-show="selectedProvider === 'Fireworks AI'">Format: <code>accounts/fireworks/models/&lt;model-id&gt;</code></p>
-            <p class="hint" x-show="selectedProvider !== 'xAI Grok (SuperGrok)' && selectedProvider !== 'Fireworks AI' && selectedProvider !== 'Custom Endpoint'">OpenRouter format: <code>provider/model-name</code></p>
+            <p class="hint" x-show="selectedProvider === 'Pioneer AI'">OpenAI-compatible — e.g. <code>gpt-5.4-mini</code>, <code>zai-org/GLM-5.1</code></p>
+            <p class="hint" x-show="selectedProvider !== 'xAI Grok (SuperGrok)' && selectedProvider !== 'Fireworks AI' && selectedProvider !== 'Pioneer AI' && selectedProvider !== 'Custom Endpoint'">OpenRouter format: <code>provider/model-name</code></p>
           </div>
         </div>
 
@@ -1392,6 +1394,7 @@ function app() {
       'Vercel AI Gateway':    { key: 'AI_GATEWAY_API_KEY',   modelKey: '_MODEL_AI_GATEWAY_API_KEY',  placeholder: ''          },
       'Google AI Studio':     { key: 'GEMINI_API_KEY',         modelKey: '_MODEL_GEMINI_API_KEY',         placeholder: 'AIza...'   },
       'Fireworks AI':         { key: 'FIREWORKS_API_KEY',      modelKey: '_MODEL_FIREWORKS_API_KEY',      placeholder: 'fw_...'    },
+      'Pioneer AI':           { key: 'PIONEER_API_KEY',        modelKey: '_MODEL_PIONEER_API_KEY',        placeholder: 'pio_sk_...' },
       'Custom Endpoint':      { key: 'CUSTOM_PROVIDER_API_KEY',modelKey: '_MODEL_CUSTOM_PROVIDER_API_KEY',placeholder: '',         isCustom: true },
       'xAI Grok (SuperGrok)': { key: null,                     modelKey: '_MODEL_XAI_OAUTH',              isOauth: 'xai' },
     },
