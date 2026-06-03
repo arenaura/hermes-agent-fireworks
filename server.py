@@ -582,7 +582,7 @@ def is_config_complete(data: dict[str, str] | None = None) -> bool:
     Used by: GET / redirect, auto_start on boot, admin API status.
     """
     if data is None:
-        data = read_env(ENV_FILE)
+        data = {**os.environ, **read_env(ENV_FILE)}
     has_model = bool(data.get("LLM_MODEL"))
     has_provider = any(data.get(k) for k in PROVIDER_KEYS) or _has_xai_oauth_tokens()
     return has_model and has_provider
